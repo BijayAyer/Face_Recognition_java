@@ -1,25 +1,27 @@
+# Maven build output
 target/
-data/
-!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# Maven wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# Kotlin
 .kotlin
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
+*.class
 
 ### Eclipse ###
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
@@ -29,6 +31,8 @@ data/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### Build directories ###
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -38,3 +42,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Face recognition biometric images ###
+data/faces/
