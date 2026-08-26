@@ -1,29 +1,29 @@
 package com.school.school_management_system.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
-public class Student {
+@Table(name = "teachers")
+public class Teacher {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-    private String email;
-    private int age;
 
-    public Student() {
+    private String email;
+
+    private String subject;
+
+    public Teacher() {
     }
 
-    public Student(Long id, String name, String email, int age) {
+    public Teacher(Long id, String name, String email, String subject) {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.age = age;
+        this.subject = subject;
     }
 
     public Long getId() {
@@ -50,19 +50,11 @@ public class Student {
         this.email = email;
     }
 
-    public int getAge() {
-        return age;
+    public String getSubject() {
+        return subject;
     }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    @Override
-    public String toString() {
-        return "Student{id=" + id
-                + ", name='" + name + "'"
-                + ", email='" + email + "'"
-                + ", age=" + age + '}';
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 }

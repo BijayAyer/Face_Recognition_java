@@ -2,7 +2,16 @@ package com.school.school_management_system.controller;
 
 import com.school.school_management_system.entity.Student;
 import com.school.school_management_system.service.StudentService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -16,34 +25,31 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    // Create Student
     @PostMapping
-    public Student createStudent(@RequestBody Student student) {
-        return studentService.saveStudent(student);
+    public ResponseEntity<Student> createStudent(@RequestBody Student student) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(studentService.saveStudent(student));
     }
 
-    // Get All Students
     @GetMapping
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
     }
 
-    // Get Student by ID
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable Long id) {
-        return studentService.getStudentById(id);
+    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
+        return studentService.getStudentById(id).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Update Student
     @PutMapping("/{id}")
-    public Student updateStudent(@PathVariable Long id, @RequestBody Student student) {
-        return studentService.updateStudent(id, student);
+    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student student) {
+        return studentService.updateStudent(id, student).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Delete Student
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable Long id) {
-        studentService.deleteStudent(id);
-        return "Student deleted successfully!";
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+        return studentService.deleteStudent(id) ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }

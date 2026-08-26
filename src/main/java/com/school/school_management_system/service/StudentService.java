@@ -5,6 +5,7 @@ import com.school.school_management_system.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentService {
@@ -15,36 +16,32 @@ public class StudentService {
         this.studentRepository = studentRepository;
     }
 
-    // Create Student
     public Student saveStudent(Student student) {
         return studentRepository.save(student);
     }
 
-    // Get All Students
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
-    //Get Student by ID
-    public Student getStudentById(Long id) {
-        return studentRepository.findById(id).orElse(null);
+    public Optional<Student> getStudentById(Long id) {
+        return studentRepository.findById(id);
     }
 
-    // Update Student
-    public Student updateStudent(Long id, Student student) {
-        Student existingStudent = studentRepository.findById(id).orElse(null);
-
-        if (existingStudent != null) {
+    public Optional<Student> updateStudent(Long id, Student student) {
+        return studentRepository.findById(id).map(existingStudent -> {
             existingStudent.setName(student.getName());
             existingStudent.setEmail(student.getEmail());
             existingStudent.setAge(student.getAge());
             return studentRepository.save(existingStudent);
-
-        }
-        return null;
+        });
     }
 
-    public void deleteStudent(Long id) {
+    public boolean deleteStudent(Long id) {
+        if (!studentRepository.existsById(id)) {
+            return false;
+        }
         studentRepository.deleteById(id);
+        return true;
     }
 }
