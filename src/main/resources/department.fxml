@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fras.controller.DepartmentController">
+
+    <top>
+        <Label text="Department Management"
+               style="-fx-font-size:22px; -fx-font-weight:bold;"
+               BorderPane.alignment="CENTER"/>
+    </top>
+
+    <center>
+        <VBox spacing="15">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <GridPane hgap="10" vgap="10">
+
+                <Label text="Department Code"/>
+                <TextField fx:id="txtDepartmentCode"
+                           GridPane.columnIndex="1"/>
+
+                <Label text="Department Name"
+                       GridPane.rowIndex="1"/>
+                <TextField fx:id="txtDepartmentName"
+                           GridPane.columnIndex="1"
+                           GridPane.rowIndex="1"/>
+
+                <Label text="Description"
+                       GridPane.rowIndex="2"/>
+                <TextArea fx:id="txtDescription"
+                          prefRowCount="3"
+                          GridPane.columnIndex="1"
+                          GridPane.rowIndex="2"/>
+
+            </GridPane>
+
+            <HBox spacing="10">
+
+                <Button text="Add"
+                        fx:id="btnAdd"
+                        onAction="#addDepartment"/>
+
+                <Button text="Update"
+                        fx:id="btnUpdate"
+                        onAction="#updateDepartment"/>
+
+                <Button text="Delete"
+                        fx:id="btnDelete"
+                        onAction="#deleteDepartment"/>
+
+                <Button text="Clear"
+                        fx:id="btnClear"
+                        onAction="#clearForm"/>
+
+            </HBox>
+
+            <TextField fx:id="txtSearch"
+                       promptText="Search Department"/>
+
+            <TableView fx:id="departmentTable">
+
+                <columns>
+
+                    <TableColumn fx:id="colId"
+                                 text="ID"
+                                 prefWidth="60"/>
+
+                    <TableColumn fx:id="colCode"
+                                 text="Code"
+                                 prefWidth="120"/>
+
+                    <TableColumn fx:id="colName"
+                                 text="Department"
+                                 prefWidth="220"/>
+
+                    <TableColumn fx:id="colDescription"
+                                 text="Description"
+                                 prefWidth="350"/>
+
+                </columns>
+
+            </TableView>
+
+        </VBox>
+
+    </center>
+
+</BorderPane>
