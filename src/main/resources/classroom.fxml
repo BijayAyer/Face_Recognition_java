@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.ClassroomController">
+    <center>
+        <VBox spacing="15">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Classroom Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Room Number" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="txtRoomNumber" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                <Label text="Building" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtBuilding" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                <Label text="Floor" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="txtFloor" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                <Label text="Capacity" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="txtCapacity" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Add" fx:id="btnAdd" onAction="#addClassroom"/>
+                <Button text="Update" fx:id="btnUpdate" onAction="#updateClassroom"/>
+                <Button text="Delete" fx:id="btnDelete" onAction="#deleteClassroom"/>
+                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
+            </HBox>
+
+            <TableView fx:id="classroomTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                    <TableColumn fx:id="colRoomNumber" text="Room #" prefWidth="100"/>
+                    <TableColumn fx:id="colBuilding" text="Building" prefWidth="150"/>
+                    <TableColumn fx:id="colFloor" text="Floor" prefWidth="80"/>
+                    <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="80"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

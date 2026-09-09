@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.SemesterController">
+    <center>
+        <VBox spacing="15">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Semester Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Department" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <ComboBox fx:id="comboDepartment" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200"/>
+
+                <Label text="Semester Name" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtSemesterName" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                <Label text="Semester Number" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="txtSemesterNumber" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Add" fx:id="btnAdd" onAction="#addSemester"/>
+                <Button text="Update" fx:id="btnUpdate" onAction="#updateSemester"/>
+                <Button text="Delete" fx:id="btnDelete" onAction="#deleteSemester"/>
+                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
+            </HBox>
+
+            <TableView fx:id="semesterTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                    <TableColumn fx:id="colName" text="Semester" prefWidth="150"/>
+                    <TableColumn fx:id="colNumber" text="Number" prefWidth="100"/>
+                    <TableColumn fx:id="colDepartment" text="Department" prefWidth="180"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

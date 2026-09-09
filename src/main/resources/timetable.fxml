@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.TimetableController">
+    <center>
+        <VBox spacing="15">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Timetable Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Day" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <ComboBox fx:id="comboDay" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="150"/>
+
+                <Label text="Start Time (HH:mm)" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtStartTime" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="09:00"/>
+
+                <Label text="End Time (HH:mm)" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="txtEndTime" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="10:00"/>
+
+                <Label text="Classroom" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <ComboBox fx:id="comboClassroom" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="200"/>
+
+                <Label text="Subject" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <ComboBox fx:id="comboSubject" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="200"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Add" fx:id="btnAdd" onAction="#addTimetable"/>
+                <Button text="Update" fx:id="btnUpdate" onAction="#updateTimetable"/>
+                <Button text="Delete" fx:id="btnDelete" onAction="#deleteTimetable"/>
+                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
+            </HBox>
+
+            <TableView fx:id="timetableTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                    <TableColumn fx:id="colDay" text="Day" prefWidth="90"/>
+                    <TableColumn fx:id="colStartTime" text="Start" prefWidth="70"/>
+                    <TableColumn fx:id="colEndTime" text="End" prefWidth="70"/>
+                    <TableColumn fx:id="colClassroom" text="Room" prefWidth="100"/>
+                    <TableColumn fx:id="colSubject" text="Subject" prefWidth="120"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

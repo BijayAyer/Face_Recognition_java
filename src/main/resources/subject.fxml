@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.SubjectController">
+    <center>
+        <VBox spacing="15">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Subject Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Semester" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <ComboBox fx:id="comboSemester" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="220"/>
+
+                <Label text="Subject Code" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtSubjectCode" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                <Label text="Subject Name" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="txtSubjectName" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                <Label text="Credit" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="txtCredit" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Add" fx:id="btnAdd" onAction="#addSubject"/>
+                <Button text="Update" fx:id="btnUpdate" onAction="#updateSubject"/>
+                <Button text="Delete" fx:id="btnDelete" onAction="#deleteSubject"/>
+                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
+            </HBox>
+
+            <TableView fx:id="subjectTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                    <TableColumn fx:id="colCode" text="Code" prefWidth="100"/>
+                    <TableColumn fx:id="colName" text="Name" prefWidth="150"/>
+                    <TableColumn fx:id="colCredit" text="Credit" prefWidth="80"/>
+                    <TableColumn fx:id="colSemester" text="Semester" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
