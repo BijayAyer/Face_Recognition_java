@@ -1,48 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<!--
+  Timetable - a tab inside AcademicPage. See classroom.fxml for why the in-file
+  heading and the inline styles were removed.
+
+  The two time fields are typed, not picked. That is worth a prompt showing the
+  exact shape expected, because "9am" and "09:00" look equally reasonable to
+  somebody who has not read the controller.
+-->
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.TimetableController">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fras.controller.TimetableController">
     <center>
-        <VBox spacing="15">
-            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        <VBox spacing="16">
 
-            <Label text="Timetable Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <VBox spacing="16" styleClass="panel">
+                <Label text="Add or edit a timetable slot" styleClass="panel-title"/>
 
-            <GridPane hgap="10" vgap="10">
-                <Label text="Day" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <ComboBox fx:id="comboDay" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="150"/>
+                <GridPane hgap="12" vgap="10">
+                    <Label text="Day" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <ComboBox fx:id="comboDay" prefWidth="260"
+                              promptText="which day"
+                              GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="Start Time (HH:mm)" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="txtStartTime" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="09:00"/>
+                    <Label text="Starts" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtStartTime" prefWidth="260"
+                               promptText="09:00 - 24-hour, HH:mm"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="End Time (HH:mm)" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <TextField fx:id="txtEndTime" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="10:00"/>
+                    <Label text="Ends" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtEndTime" prefWidth="260"
+                               promptText="10:00 - 24-hour, HH:mm"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                <Label text="Classroom" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <ComboBox fx:id="comboClassroom" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="200"/>
+                    <Label text="Room" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <ComboBox fx:id="comboClassroom" prefWidth="260"
+                              promptText="which room"
+                              GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                <Label text="Subject" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                <ComboBox fx:id="comboSubject" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="200"/>
-            </GridPane>
+                    <Label text="Subject" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <ComboBox fx:id="comboSubject" prefWidth="260"
+                              promptText="which subject"
+                              GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                </GridPane>
 
-            <HBox spacing="10">
-                <Button text="Add" fx:id="btnAdd" onAction="#addTimetable"/>
-                <Button text="Update" fx:id="btnUpdate" onAction="#updateTimetable"/>
-                <Button text="Delete" fx:id="btnDelete" onAction="#deleteTimetable"/>
-                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
-            </HBox>
+                <HBox spacing="8">
+                    <Button text="Add" fx:id="btnAdd" onAction="#addTimetable"
+                            styleClass="button-primary"/>
+                    <Button text="Update" fx:id="btnUpdate" onAction="#updateTimetable"/>
+                    <Button text="Delete" fx:id="btnDelete" onAction="#deleteTimetable"
+                            styleClass="button-danger"/>
+                    <Button text="Clear" fx:id="btnClear" onAction="#clearForm"
+                            styleClass="button-ghost"/>
+                </HBox>
+            </VBox>
 
             <TableView fx:id="timetableTable" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                    <TableColumn fx:id="colDay" text="Day" prefWidth="90"/>
-                    <TableColumn fx:id="colStartTime" text="Start" prefWidth="70"/>
-                    <TableColumn fx:id="colEndTime" text="End" prefWidth="70"/>
-                    <TableColumn fx:id="colClassroom" text="Room" prefWidth="100"/>
-                    <TableColumn fx:id="colSubject" text="Subject" prefWidth="120"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="colDay" text="Day" prefWidth="100"/>
+                    <TableColumn fx:id="colStartTime" text="Starts" prefWidth="80"/>
+                    <TableColumn fx:id="colEndTime" text="Ends" prefWidth="80"/>
+                    <TableColumn fx:id="colClassroom" text="Room" prefWidth="120"/>
+                    <TableColumn fx:id="colSubject" text="Subject" prefWidth="160"/>
                 </columns>
             </TableView>
         </VBox>

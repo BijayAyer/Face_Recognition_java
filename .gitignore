@@ -45,3 +45,17 @@ build/
 
 ### Face recognition biometric images ###
 data/faces/
+
+### Local database ###
+# The running app keeps its H2 file here. It holds real accounts, including
+# password hashes, and it is rewritten on every run - so committing it both
+# leaks credentials and guarantees a conflict on every pull.
+data/*.mv.db
+data/*.trace.db
+data/*.lock.db
+
+### JVM crash logs ###
+# Written to the working directory when the JVM dies in native code, which for
+# this project means OpenCV. Worth reading, not worth committing.
+hs_err_pid*.log
+replay_pid*.log

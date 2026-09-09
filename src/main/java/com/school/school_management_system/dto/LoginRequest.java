@@ -1,13 +1,13 @@
 package com.school.school_management_system.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
 
-    @NotNull
+    @NotBlank(message = "Email is required")
     private String email;
 
-    @NotNull
+    @NotBlank(message = "Password is required")
     private String password;
 
     public LoginRequest() {

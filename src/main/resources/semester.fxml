@@ -1,40 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<!--
+  Semesters - a tab inside AcademicPage. See classroom.fxml for why the in-file
+  heading and the inline styles were removed.
+-->
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.SemesterController">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fras.controller.SemesterController">
     <center>
-        <VBox spacing="15">
-            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        <VBox spacing="16">
 
-            <Label text="Semester Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <VBox spacing="16" styleClass="panel">
+                <Label text="Add or edit a semester" styleClass="panel-title"/>
 
-            <GridPane hgap="10" vgap="10">
-                <Label text="Department" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <ComboBox fx:id="comboDepartment" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200"/>
+                <GridPane hgap="12" vgap="10">
+                    <Label text="Department" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <ComboBox fx:id="comboDepartment" prefWidth="260"
+                              promptText="which department"
+                              GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="Semester Name" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="txtSemesterName" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label text="Name" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtSemesterName" prefWidth="260"
+                               promptText="e.g. Autumn 2026"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="Semester Number" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <TextField fx:id="txtSemesterNumber" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-            </GridPane>
+                    <Label text="Number" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtSemesterNumber" prefWidth="260"
+                               promptText="e.g. 3"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                </GridPane>
 
-            <HBox spacing="10">
-                <Button text="Add" fx:id="btnAdd" onAction="#addSemester"/>
-                <Button text="Update" fx:id="btnUpdate" onAction="#updateSemester"/>
-                <Button text="Delete" fx:id="btnDelete" onAction="#deleteSemester"/>
-                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
-            </HBox>
+                <HBox spacing="8">
+                    <Button text="Add" fx:id="btnAdd" onAction="#addSemester"
+                            styleClass="button-primary"/>
+                    <Button text="Update" fx:id="btnUpdate" onAction="#updateSemester"/>
+                    <Button text="Delete" fx:id="btnDelete" onAction="#deleteSemester"
+                            styleClass="button-danger"/>
+                    <Button text="Clear" fx:id="btnClear" onAction="#clearForm"
+                            styleClass="button-ghost"/>
+                </HBox>
+            </VBox>
 
             <TableView fx:id="semesterTable" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-                    <TableColumn fx:id="colName" text="Semester" prefWidth="150"/>
-                    <TableColumn fx:id="colNumber" text="Number" prefWidth="100"/>
-                    <TableColumn fx:id="colDepartment" text="Department" prefWidth="180"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="colName" text="Semester" prefWidth="180"/>
+                    <TableColumn fx:id="colNumber" text="Number" prefWidth="90"/>
+                    <TableColumn fx:id="colDepartment" text="Department" prefWidth="200"/>
                 </columns>
             </TableView>
         </VBox>

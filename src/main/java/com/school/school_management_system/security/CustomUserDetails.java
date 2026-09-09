@@ -1,5 +1,6 @@
 package com.school.school_management_system.security;
 
+import com.school.school_management_system.entity.Role;
 import com.school.school_management_system.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,8 +10,12 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Adapts our {@link User} entity to what Spring Security expects.
- * The role is exposed as "ROLE_<ROLE_NAME>" so hasRole("ADMIN") etc. works.
+ * Adapts the {@link User} entity to what Spring Security expects.
+ * The role is exposed as {@code ROLE_<NAME>} so {@code hasRole("ADMIN")}
+ * works, and {@link #isEnabled()} now actually reflects the account's
+ * enabled flag instead of being hard-coded to true - a disabled account
+ * is rejected by {@code DaoAuthenticationProvider} with a
+ * {@code DisabledException}.
  */
 public class CustomUserDetails implements UserDetails {
 
@@ -26,6 +31,10 @@ public class CustomUserDetails implements UserDetails {
 
     public User getUser() {
         return user;
+    }
+
+    public Role getRole() {
+        return user.getRole();
     }
 
     @Override
@@ -60,6 +69,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isEnabled();
     }
 }

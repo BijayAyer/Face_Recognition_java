@@ -1,15 +1,26 @@
 package com.fras.controller;
 
-import com.fras.Main.Refreshable;
+import com.fras.Refreshable;
 import com.fras.model.Classroom;
 import com.fras.service.ClassroomService;
 import com.fras.service.impl.ClassroomServiceImpl;
+import com.fras.ui.Toast;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+/**
+ * Classrooms - the rooms attendance is taken in.
+ *
+ * <p>Same shape as {@link DepartmentController}: {@link Crud} does the threading
+ * and the reporting, and Update sends a detached copy so a refused write leaves
+ * the table showing what the database actually holds.
+ */
 public class ClassroomController implements Refreshable {
 
     @FXML private TextField txtRoomNumber;
@@ -30,14 +41,22 @@ public class ClassroomController implements Refreshable {
     @FXML private Button btnClear;
 
     private final ClassroomService classroomService = new ClassroomServiceImpl();
-    private final ObservableList<Classroom> classroomList = FXCollections.observableArrayList();
-    private Classroom selectedClassroom;
+    private final ObservableList<Classroom> rows = FXCollections.observableArrayList();
+
+    private Classroom selected;
 
     @FXML
     public void initialize() {
         setupTableColumns();
-        setupTableSelectionListener();
-        loadClassrooms();
+        classroomTable.setItems(rows);
+        classroomTable.getSelectionModel().selectedItemProperty()
+                .addListener((observable, before, after) -> {
+                    if (after != null) {
+                        selected = after;
+                        populateForm(after);
+                    }
+                });
+        load();
     }
 
     private void setupTableColumns() {
@@ -48,23 +67,17 @@ public class ClassroomController implements Refreshable {
         colCapacity.setCellValueFactory(new PropertyValueFactory<>("capacity"));
     }
 
-    private void setupTableSelectionListener() {
-        classroomTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                selectedClassroom = newVal;
-                populateForm(newVal);
-            }
-        });
-    }
-
-    private void loadClassrooms() {
-        classroomList.setAll(classroomService.getAllClassrooms());
-        classroomTable.setItems(classroomList);
-    }
-
     @Override
     public void refreshData() {
-        loadClassrooms();
+        load();
+    }
+
+    private void load() {
+        Crud.loading(classroomTable);
+        Crud.read(classroomService::getAllClassrooms, loaded -> {
+            Crud.empty(classroomTable, "No classrooms yet. Add the first one on the left.");
+            rows.setAll(loaded);
+        });
     }
 
     private void populateForm(Classroom classroom) {
@@ -74,51 +87,79 @@ public class ClassroomController implements Refreshable {
         txtCapacity.setText(String.valueOf(classroom.getCapacity()));
     }
 
+    // =========================================================
+    // WRITES
+    // =========================================================
+
     @FXML
     private void addClassroom() {
-        if (!validateForm()) return;
-
-        Classroom classroom = new Classroom(
-                null,
-                txtRoomNumber.getText().trim(),
-                txtBuilding.getText().trim(),
-                Integer.parseInt(txtFloor.getText().trim()),
-                Integer.parseInt(txtCapacity.getText().trim())
-        );
-
-        classroomService.addClassroom(classroom);
-        loadClassrooms();
-        clearForm();
+        if (!validateForm()) {
+            return;
+        }
+        Classroom classroom = fromForm(null);
+        Crud.write(() -> classroomService.addClassroom(classroom),
+                () -> {
+                    Toast.ok("Room " + classroom.getRoomNumber() + " added.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void updateClassroom() {
-        if (selectedClassroom == null) {
-            showAlert("Please select a classroom to update.");
+        if (selected == null) {
+            Toast.warn("Choose a classroom in the table to update.");
             return;
         }
-        if (!validateForm()) return;
-
-        selectedClassroom.setRoomNumber(txtRoomNumber.getText().trim());
-        selectedClassroom.setBuilding(txtBuilding.getText().trim());
-        selectedClassroom.setFloor(Integer.parseInt(txtFloor.getText().trim()));
-        selectedClassroom.setCapacity(Integer.parseInt(txtCapacity.getText().trim()));
-
-        classroomService.updateClassroom(selectedClassroom);
-        loadClassrooms();
-        clearForm();
+        if (!validateForm()) {
+            return;
+        }
+        Classroom edited = fromForm(selected.getId());
+        Crud.write(() -> classroomService.updateClassroom(edited),
+                () -> {
+                    Toast.ok("Room " + edited.getRoomNumber() + " updated.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void deleteClassroom() {
-        if (selectedClassroom == null) {
-            showAlert("Please select a classroom to delete.");
+        if (selected == null) {
+            Toast.warn("Choose a classroom in the table to delete.");
             return;
         }
+        Classroom doomed = selected;
+        boolean go = Crud.confirmDelete(classroomTable,
+                "room " + doomed.getRoomNumber(),
+                "Room " + doomed.getRoomNumber() + " in " + doomed.getBuilding()
+                        + " will be removed. A room cannot be deleted while it is booked "
+                        + "on the timetable, or once attendance has been taken in it.");
+        if (!go) {
+            return;
+        }
+        Crud.write(() -> classroomService.deleteClassroom(doomed.getId()),
+                () -> {
+                    Toast.ok("Room " + doomed.getRoomNumber() + " deleted.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
+    }
 
-        classroomService.deleteClassroom(selectedClassroom.getId());
-        loadClassrooms();
-        clearForm();
+    // =========================================================
+    // THE FORM
+    // =========================================================
+
+    private Classroom fromForm(Long id) {
+        return new Classroom(
+                id,
+                txtRoomNumber.getText().trim(),
+                txtBuilding.getText().trim(),
+                Integer.parseInt(txtFloor.getText().trim()),
+                Integer.parseInt(txtCapacity.getText().trim()));
     }
 
     @FXML
@@ -128,29 +169,39 @@ public class ClassroomController implements Refreshable {
         txtFloor.clear();
         txtCapacity.clear();
         classroomTable.getSelectionModel().clearSelection();
-        selectedClassroom = null;
+        selected = null;
     }
 
+    /**
+     * The numbers are parsed here and only read in {@link #fromForm(Long)}, so
+     * {@code parseInt} there cannot throw once this has passed.
+     */
     private boolean validateForm() {
-        if (txtRoomNumber.getText().trim().isEmpty() || txtBuilding.getText().trim().isEmpty()) {
-            showAlert("Room number and building are required.");
+        if (Crud.blank(txtRoomNumber.getText())) {
+            Toast.warn("A classroom needs a room number.");
             return false;
         }
+        if (Crud.blank(txtBuilding.getText())) {
+            Toast.warn("A classroom needs a building.");
+            return false;
+        }
+        int floor;
+        int capacity;
         try {
-            Integer.parseInt(txtFloor.getText().trim());
-            Integer.parseInt(txtCapacity.getText().trim());
-        } catch (NumberFormatException e) {
-            showAlert("Floor and capacity must be valid numbers.");
+            floor = Integer.parseInt(txtFloor.getText().trim());
+            capacity = Integer.parseInt(txtCapacity.getText().trim());
+        } catch (NumberFormatException notANumber) {
+            Toast.warn("Floor and capacity must be whole numbers.");
+            return false;
+        }
+        if (floor < 0) {
+            Toast.warn("A floor cannot be negative.");
+            return false;
+        }
+        if (capacity < 1) {
+            Toast.warn("A classroom needs room for at least one person.");
             return false;
         }
         return true;
-    }
-
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Validation");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }

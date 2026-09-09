@@ -2,6 +2,7 @@ package com.school.school_management_system.controller;
 
 import com.school.school_management_system.entity.Teacher;
 import com.school.school_management_system.service.TeacherService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** Teacher roster. See {@link StudentController} for why {@code @Valid} matters. */
 @RestController
 @RequestMapping("/teachers")
 public class TeacherController {
@@ -26,7 +28,7 @@ public class TeacherController {
     }
 
     @PostMapping
-    public ResponseEntity<Teacher> createTeacher(@RequestBody Teacher teacher) {
+    public ResponseEntity<Teacher> createTeacher(@Valid @RequestBody Teacher teacher) {
         return ResponseEntity.status(HttpStatus.CREATED).body(teacherService.saveTeacher(teacher));
     }
 
@@ -42,7 +44,8 @@ public class TeacherController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody Teacher teacher) {
+    public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id,
+                                                 @Valid @RequestBody Teacher teacher) {
         return teacherService.updateTeacher(id, teacher).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

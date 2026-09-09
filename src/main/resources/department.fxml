@@ -1,94 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<!--
+  Departments - a tab inside AcademicPage. See classroom.fxml for why the
+  in-file heading and the inline styles were removed.
+
+  This one had its heading in <top>, which put it above the tab's own scroll
+  area and outside the panel, so it was the only one of the five that looked
+  different as well as redundant.
+-->
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.fras.controller.DepartmentController">
-
-    <top>
-        <Label text="Department Management"
-               style="-fx-font-size:22px; -fx-font-weight:bold;"
-               BorderPane.alignment="CENTER"/>
-    </top>
-
     <center>
-        <VBox spacing="15">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
+        <VBox spacing="16">
 
-            <GridPane hgap="10" vgap="10">
+            <VBox spacing="16" styleClass="panel">
+                <Label text="Add or edit a department" styleClass="panel-title"/>
 
-                <Label text="Department Code"/>
-                <TextField fx:id="txtDepartmentCode"
-                           GridPane.columnIndex="1"/>
+                <GridPane hgap="12" vgap="10">
+                    <Label text="Code" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="txtDepartmentCode" prefWidth="260"
+                               promptText="e.g. CSE"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="Department Name"
-                       GridPane.rowIndex="1"/>
-                <TextField fx:id="txtDepartmentName"
-                           GridPane.columnIndex="1"
-                           GridPane.rowIndex="1"/>
+                    <Label text="Name" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtDepartmentName" prefWidth="260"
+                               promptText="e.g. Computer Science"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="Description"
-                       GridPane.rowIndex="2"/>
-                <TextArea fx:id="txtDescription"
-                          prefRowCount="3"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="2"/>
+                    <Label text="Description" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextArea fx:id="txtDescription" prefRowCount="3" prefWidth="260"
+                              promptText="optional"
+                              GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                </GridPane>
 
-            </GridPane>
+                <HBox spacing="8">
+                    <Button text="Add" fx:id="btnAdd" onAction="#addDepartment"
+                            styleClass="button-primary"/>
+                    <Button text="Update" fx:id="btnUpdate" onAction="#updateDepartment"/>
+                    <Button text="Delete" fx:id="btnDelete" onAction="#deleteDepartment"
+                            styleClass="button-danger"/>
+                    <Button text="Clear" fx:id="btnClear" onAction="#clearForm"
+                            styleClass="button-ghost"/>
+                </HBox>
+            </VBox>
 
-            <HBox spacing="10">
+            <TextField fx:id="txtSearch" prefWidth="280"
+                       promptText="Filter by code or name"/>
 
-                <Button text="Add"
-                        fx:id="btnAdd"
-                        onAction="#addDepartment"/>
-
-                <Button text="Update"
-                        fx:id="btnUpdate"
-                        onAction="#updateDepartment"/>
-
-                <Button text="Delete"
-                        fx:id="btnDelete"
-                        onAction="#deleteDepartment"/>
-
-                <Button text="Clear"
-                        fx:id="btnClear"
-                        onAction="#clearForm"/>
-
-            </HBox>
-
-            <TextField fx:id="txtSearch"
-                       promptText="Search Department"/>
-
-            <TableView fx:id="departmentTable">
-
+            <TableView fx:id="departmentTable" VBox.vgrow="ALWAYS">
                 <columns>
-
-                    <TableColumn fx:id="colId"
-                                 text="ID"
-                                 prefWidth="60"/>
-
-                    <TableColumn fx:id="colCode"
-                                 text="Code"
-                                 prefWidth="120"/>
-
-                    <TableColumn fx:id="colName"
-                                 text="Department"
-                                 prefWidth="220"/>
-
-                    <TableColumn fx:id="colDescription"
-                                 text="Description"
-                                 prefWidth="350"/>
-
+                    <TableColumn fx:id="colId" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="colCode" text="Code" prefWidth="110"/>
+                    <TableColumn fx:id="colName" text="Department" prefWidth="220"/>
+                    <TableColumn fx:id="colDescription" text="Description" prefWidth="320"/>
                 </columns>
-
             </TableView>
-
         </VBox>
-
     </center>
-
 </BorderPane>

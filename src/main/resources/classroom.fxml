@@ -1,44 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<!--
+  Classrooms - a tab inside AcademicPage.
+
+  The heading that used to sit at the top of this file is gone: the page already
+  says "Academic setup" and the tab already says "Classrooms", so a third
+  "Classroom Management" in the same 40 pixels said nothing. The inline
+  -fx-font-size/-fx-font-weight is gone with it - hard-coded styles ignore the
+  theme, so that one label stayed black in dark mode.
+
+  There is no padding here either. .tab-pane > .tab-content-area supplies the gap
+  above, and .content-host supplies the gutter at the sides; adding a third made
+  these five screens sit visibly further in than every other page.
+-->
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.ClassroomController">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fras.controller.ClassroomController">
     <center>
-        <VBox spacing="15">
-            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        <VBox spacing="16">
 
-            <Label text="Classroom Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <VBox spacing="16" styleClass="panel">
+                <Label text="Add or edit a room" styleClass="panel-title"/>
 
-            <GridPane hgap="10" vgap="10">
-                <Label text="Room Number" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <TextField fx:id="txtRoomNumber" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <GridPane hgap="12" vgap="10">
+                    <Label text="Room number" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="txtRoomNumber" prefWidth="260"
+                               promptText="e.g. 204"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="Building" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="txtBuilding" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label text="Building" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtBuilding" prefWidth="260"
+                               promptText="e.g. Science Block"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="Floor" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <TextField fx:id="txtFloor" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Label text="Floor" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtFloor" prefWidth="260"
+                               promptText="e.g. 2"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                <Label text="Capacity" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <TextField fx:id="txtCapacity" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-            </GridPane>
+                    <Label text="Capacity" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="txtCapacity" prefWidth="260"
+                               promptText="how many seats"
+                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
 
-            <HBox spacing="10">
-                <Button text="Add" fx:id="btnAdd" onAction="#addClassroom"/>
-                <Button text="Update" fx:id="btnUpdate" onAction="#updateClassroom"/>
-                <Button text="Delete" fx:id="btnDelete" onAction="#deleteClassroom"/>
-                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
-            </HBox>
+                <HBox spacing="8">
+                    <Button text="Add" fx:id="btnAdd" onAction="#addClassroom"
+                            styleClass="button-primary"/>
+                    <Button text="Update" fx:id="btnUpdate" onAction="#updateClassroom"/>
+                    <Button text="Delete" fx:id="btnDelete" onAction="#deleteClassroom"
+                            styleClass="button-danger"/>
+                    <Button text="Clear" fx:id="btnClear" onAction="#clearForm"
+                            styleClass="button-ghost"/>
+                </HBox>
+            </VBox>
 
             <TableView fx:id="classroomTable" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                    <TableColumn fx:id="colRoomNumber" text="Room #" prefWidth="100"/>
-                    <TableColumn fx:id="colBuilding" text="Building" prefWidth="150"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="colRoomNumber" text="Room" prefWidth="110"/>
+                    <TableColumn fx:id="colBuilding" text="Building" prefWidth="180"/>
                     <TableColumn fx:id="colFloor" text="Floor" prefWidth="80"/>
-                    <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="80"/>
+                    <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="90"/>
                 </columns>
             </TableView>
         </VBox>

@@ -2,54 +2,74 @@ package com.fras.dao.impl;
 
 import com.fras.dao.SemesterDAO;
 import com.fras.model.Semester;
+import com.fras.service.ApiService;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Semesters, over {@code /academic/semesters}. See
+ * {@link DepartmentDAOImpl} for why the reads throw rather than answering a
+ * failed call with an empty list.
+ *
+ * <p>Blocking. Call from a background thread; the screens use
+ * {@link com.fras.ui.Async}.
+ */
 public class SemesterDAOImpl implements SemesterDAO {
 
-    private static final List<Semester> semesters = new ArrayList<>();
-    private static long nextId = 1;
+    private final ApiService apiService = ApiService.getShared();
 
     @Override
     public void save(Semester semester) {
-        semester.setId(nextId++);
-        semesters.add(semester);
+        try {
+            apiService.post("/academic/semesters", AcademicJson.toJson(semester));
+        } catch (ApiService.ApiException e) {
+            throw AcademicJson.failed("add the semester", e);
+        }
     }
 
     @Override
     public void update(Semester semester) {
-        for (int i = 0; i < semesters.size(); i++) {
-            if (semesters.get(i).getId().equals(semester.getId())) {
-                semesters.set(i, semester);
-                return;
-            }
+        try {
+            apiService.put("/academic/semesters/" + semester.getId(),
+                    AcademicJson.toJson(semester));
+        } catch (ApiService.ApiException e) {
+            throw AcademicJson.failed("update the semester", e);
         }
     }
 
     @Override
     public void delete(Long id) {
-        semesters.removeIf(s -> s.getId().equals(id));
+        try {
+            apiService.delete("/academic/semesters/" + id);
+        } catch (ApiService.ApiException e) {
+            throw AcademicJson.failed("delete the semester", e);
+        }
     }
 
     @Override
     public Semester findById(Long id) {
-        return semesters.stream()
-                .filter(s -> s.getId().equals(id))
+        return findAll().stream()
+                .filter(s -> s.getId() != null && s.getId().equals(id))
                 .findFirst()
                 .orElse(null);
     }
 
     @Override
     public List<Semester> findAll() {
-        return new ArrayList<>(semesters);
+        try {
+            return AcademicJson.parseList(apiService.get("/academic/semesters"), Semester.class);
+        } catch (ApiService.ApiException e) {
+            throw AcademicJson.failed("load the semesters", e);
+        }
     }
 
     @Override
     public List<Semester> findByDepartmentId(Long departmentId) {
-        return semesters.stream()
-                .filter(s -> s.getDepartment() != null && s.getDepartment().getId().equals(departmentId))
-                .collect(Collectors.toList());
+        try {
+            String json = apiService.get("/academic/semesters?departmentId=" + departmentId);
+            return AcademicJson.parseList(json, Semester.class);
+        } catch (ApiService.ApiException e) {
+            throw AcademicJson.failed("load the department's semesters", e);
+        }
     }
 }

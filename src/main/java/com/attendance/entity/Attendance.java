@@ -7,18 +7,36 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * One attendance record: a student, in a classroom, for a subject, on a date.
+ *
+ * <p>Student/classroom/subject are stored as plain ids rather than JPA
+ * associations because they point at three different modules (and, for
+ * students, a table owned by another package). The indexes below cover the
+ * three access patterns the app actually uses: a student's own history, a
+ * class register for one session, and the duplicate check on insert.
+ */
 @Entity
 @Table(
         name = "attendance",
         uniqueConstraints = @UniqueConstraint(
+                name = "uk_attendance_student_subject_date",
                 columnNames = {"student_id", "subject_id", "attendance_date"}
-        )
+        ),
+        indexes = {
+                @Index(name = "idx_attendance_student_date", columnList = "student_id, attendance_date"),
+                @Index(name = "idx_attendance_session", columnList = "classroom_id, subject_id, attendance_date"),
+                @Index(name = "idx_attendance_date", columnList = "attendance_date")
+        }
 )
 public class Attendance {
 
@@ -42,15 +60,19 @@ public class Attendance {
     private LocalTime attendanceTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 16)
     private Status status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "marked_by", nullable = false)
+    @Column(name = "marked_by", nullable = false, length = 24)
     private MarkedBy markedBy;
 
     @Column(name = "confidence_score")
     private Double confidenceScore;
+
+    /** Wall-clock instant the row was written; useful for auditing edits. */
+    @Column(name = "recorded_at")
+    private Instant recordedAt;
 
     public Attendance() {
     }
@@ -68,12 +90,27 @@ public class Attendance {
         this.confidenceScore = confidenceScore;
     }
 
+    @PrePersist
+    void onCreate() {
+        if (recordedAt == null) {
+            recordedAt = Instant.now();
+        }
+    }
+
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Instant getRecordedAt() {
+        return recordedAt;
+    }
+
+    public void setRecordedAt(Instant recordedAt) {
+        this.recordedAt = recordedAt;
     }
 
     public Long getStudentId() {

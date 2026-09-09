@@ -1,19 +1,35 @@
 package com.fras.controller;
 
-import com.fras.Main.Refreshable;
+import com.fras.Refreshable;
 import com.fras.model.Semester;
 import com.fras.model.Subject;
 import com.fras.service.SemesterService;
 import com.fras.service.SubjectService;
 import com.fras.service.impl.SemesterServiceImpl;
 import com.fras.service.impl.SubjectServiceImpl;
+import com.fras.ui.Toast;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
+/**
+ * Subjects, each belonging to a semester.
+ *
+ * <p>Like {@link SemesterController}, the combo's items and the semester hanging
+ * off a subject row come from two separate requests and the models have no
+ * {@code equals}, so selection goes through {@link Crud#selectById} by id. The
+ * combo labels a semester with its department in brackets, because two
+ * departments can both run a "Semester 1" and the name alone does not say which
+ * one is which.
+ */
 public class SubjectController implements Refreshable {
 
     @FXML private ComboBox<Semester> comboSemester;
@@ -35,33 +51,46 @@ public class SubjectController implements Refreshable {
 
     private final SemesterService semesterService = new SemesterServiceImpl();
     private final SubjectService subjectService = new SubjectServiceImpl();
-    private final ObservableList<Subject> subjectList = FXCollections.observableArrayList();
-    private Subject selectedSubject;
+    private final ObservableList<Subject> rows = FXCollections.observableArrayList();
+
+    private Subject selected;
 
     @FXML
     public void initialize() {
-        setupSemesterCombo();
+        comboSemester.setConverter(semesterLabels());
         setupTableColumns();
-        setupTableSelectionListener();
-        loadSubjects();
+        subjectTable.setItems(rows);
+        subjectTable.getSelectionModel().selectedItemProperty()
+                .addListener((observable, before, after) -> {
+                    if (after != null) {
+                        selected = after;
+                        populateForm(after);
+                    }
+                });
+        loadSemesters();
+        load();
     }
 
-    private void setupSemesterCombo() {
-        ObservableList<Semester> semesters = FXCollections.observableArrayList(semesterService.getAllSemesters());
-        comboSemester.setItems(semesters);
-        comboSemester.setConverter(new StringConverter<>() {
+    /** Set once. The old version rebuilt it on every refresh. */
+    private StringConverter<Semester> semesterLabels() {
+        return new StringConverter<>() {
             @Override
             public String toString(Semester semester) {
-                if (semester == null) return "";
-                String deptName = semester.getDepartment() != null ? semester.getDepartment().getDepartmentName() : "";
-                return semester.getName() + " (" + deptName + ")";
+                if (semester == null) {
+                    return "";
+                }
+                String department = semester.getDepartment() == null
+                        ? "" : semester.getDepartment().getDepartmentName();
+                return department.isEmpty()
+                        ? semester.getName()
+                        : semester.getName() + " (" + department + ")";
             }
 
             @Override
-            public Semester fromString(String string) {
+            public Semester fromString(String text) {
                 return null;
             }
-        });
+        };
     }
 
     private void setupTableColumns() {
@@ -70,84 +99,114 @@ public class SubjectController implements Refreshable {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
         colSemester.setCellValueFactory(data -> {
-            Semester sem = data.getValue().getSemester();
-            String name = sem != null ? sem.getName() : "";
-            return new javafx.beans.property.SimpleStringProperty(name);
+            Semester semester = data.getValue().getSemester();
+            return new SimpleStringProperty(semester == null ? "" : semester.getName());
         });
-    }
-
-    private void setupTableSelectionListener() {
-        subjectTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                selectedSubject = newVal;
-                populateForm(newVal);
-            }
-        });
-    }
-
-    private void loadSubjects() {
-        subjectList.setAll(subjectService.getAllSubjects());
-        subjectTable.setItems(subjectList);
     }
 
     @Override
     public void refreshData() {
-        setupSemesterCombo();
-        loadSubjects();
+        loadSemesters();
+        load();
+    }
+
+    private void loadSemesters() {
+        Crud.read(semesterService::getAllSemesters,
+                semesters -> Crud.putItems(comboSemester, semesters, Semester::getId));
+    }
+
+    private void load() {
+        Crud.loading(subjectTable);
+        Crud.read(subjectService::getAllSubjects, loaded -> {
+            Crud.empty(subjectTable, "No subjects yet. Pick a semester and add one.");
+            rows.setAll(loaded);
+        });
     }
 
     private void populateForm(Subject subject) {
-        comboSemester.setValue(subject.getSemester());
+        Crud.selectById(comboSemester, subject.getSemester(), Semester::getId);
         txtSubjectCode.setText(subject.getCode());
         txtSubjectName.setText(subject.getName());
         txtCredit.setText(String.valueOf(subject.getCredit()));
     }
 
+    // =========================================================
+    // WRITES
+    // =========================================================
+
     @FXML
     private void addSubject() {
-        if (!validateForm()) return;
-
-        Subject subject = new Subject(
-                null,
-                txtSubjectCode.getText().trim(),
-                txtSubjectName.getText().trim(),
-                Integer.parseInt(txtCredit.getText().trim()),
-                comboSemester.getValue()
-        );
-
-        subjectService.addSubject(subject);
-        loadSubjects();
-        clearForm();
+        if (!validateForm()) {
+            return;
+        }
+        Subject subject = fromForm(null);
+        Crud.write(() -> subjectService.addSubject(subject),
+                () -> {
+                    Toast.ok("Subject " + subject.getCode() + " added.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void updateSubject() {
-        if (selectedSubject == null) {
-            showAlert("Please select a subject to update.");
+        if (selected == null) {
+            Toast.warn("Choose a subject in the table to update.");
             return;
         }
-        if (!validateForm()) return;
-
-        selectedSubject.setCode(txtSubjectCode.getText().trim());
-        selectedSubject.setName(txtSubjectName.getText().trim());
-        selectedSubject.setCredit(Integer.parseInt(txtCredit.getText().trim()));
-        selectedSubject.setSemester(comboSemester.getValue());
-
-        subjectService.updateSubject(selectedSubject);
-        loadSubjects();
-        clearForm();
+        if (!validateForm()) {
+            return;
+        }
+        // A copy carrying the selected row's id. The old version wrote the form
+        // into the row already in the table before calling the server, so a
+        // refused update - a duplicate subject code, most often, since the
+        // column is unique - left the screen showing an edit that never landed.
+        Subject edited = fromForm(selected.getId());
+        Crud.write(() -> subjectService.updateSubject(edited),
+                () -> {
+                    Toast.ok("Subject " + edited.getCode() + " updated.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void deleteSubject() {
-        if (selectedSubject == null) {
-            showAlert("Please select a subject to delete.");
+        if (selected == null) {
+            Toast.warn("Choose a subject in the table to delete.");
             return;
         }
+        Subject doomed = selected;
+        boolean go = Crud.confirmDelete(subjectTable,
+                "subject " + doomed.getCode(),
+                "\"" + doomed.getName() + "\" will be removed. A subject cannot be "
+                        + "deleted while it is on the timetable, or once attendance has "
+                        + "been recorded against it.");
+        if (!go) {
+            return;
+        }
+        Crud.write(() -> subjectService.deleteSubject(doomed.getId()),
+                () -> {
+                    Toast.ok("Subject " + doomed.getCode() + " deleted.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
+    }
 
-        subjectService.deleteSubject(selectedSubject.getId());
-        loadSubjects();
-        clearForm();
+    // =========================================================
+    // THE FORM
+    // =========================================================
+
+    private Subject fromForm(Long id) {
+        return new Subject(
+                id,
+                txtSubjectCode.getText().trim(),
+                txtSubjectName.getText().trim(),
+                Integer.parseInt(txtCredit.getText().trim()),
+                comboSemester.getValue());
     }
 
     @FXML
@@ -157,32 +216,39 @@ public class SubjectController implements Refreshable {
         txtSubjectName.clear();
         txtCredit.clear();
         subjectTable.getSelectionModel().clearSelection();
-        selectedSubject = null;
+        selected = null;
     }
 
+    /**
+     * The credit is parsed here and only read in {@link #fromForm(Long)}, so
+     * {@code parseInt} there cannot throw once this has passed. The old version
+     * checked that it parsed but not that it was positive, so a subject worth
+     * zero or minus three credits went to the server unchallenged.
+     */
     private boolean validateForm() {
         if (comboSemester.getValue() == null) {
-            showAlert("Please select a semester.");
+            Toast.warn("Choose the semester this subject belongs to.");
             return false;
         }
-        if (txtSubjectCode.getText().trim().isEmpty() || txtSubjectName.getText().trim().isEmpty()) {
-            showAlert("Subject code and name are required.");
+        if (Crud.blank(txtSubjectCode.getText())) {
+            Toast.warn("A subject needs a code, for example CS101.");
             return false;
         }
+        if (Crud.blank(txtSubjectName.getText())) {
+            Toast.warn("A subject needs a name.");
+            return false;
+        }
+        int credit;
         try {
-            Integer.parseInt(txtCredit.getText().trim());
-        } catch (NumberFormatException e) {
-            showAlert("Credit must be a valid number.");
+            credit = Integer.parseInt(txtCredit.getText().trim());
+        } catch (NumberFormatException notANumber) {
+            Toast.warn("Credit must be a whole number.");
+            return false;
+        }
+        if (credit < 1) {
+            Toast.warn("A subject must be worth at least one credit.");
             return false;
         }
         return true;
-    }
-
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Validation");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }

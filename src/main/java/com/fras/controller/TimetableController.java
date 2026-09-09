@@ -1,6 +1,6 @@
 package com.fras.controller;
 
-import com.fras.Main.Refreshable;
+import com.fras.Refreshable;
 import com.fras.model.Classroom;
 import com.fras.model.Subject;
 import com.fras.model.Timetable;
@@ -10,10 +10,16 @@ import com.fras.service.TimetableService;
 import com.fras.service.impl.ClassroomServiceImpl;
 import com.fras.service.impl.SubjectServiceImpl;
 import com.fras.service.impl.TimetableServiceImpl;
+import com.fras.ui.Toast;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
@@ -21,7 +27,25 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * The timetable: a subject taught in a classroom on a weekday between two times.
+ *
+ * <p>Three requests fill this tab - classrooms, subjects and the timetable
+ * itself - and every one of them ran on the JavaFX thread. See {@link Crud} for
+ * why that is now off it.
+ *
+ * <p>Double-booking is refused by {@code TimetableServiceImpl}, which throws
+ * {@link IllegalStateException} with a sentence written for a person.
+ * {@link com.fras.ui.Async#describe} passes that message through unchanged, so
+ * {@link Crud#write} reports it as a toast and this class needs no catch of its
+ * own. The old code caught it around Add and Update but not around Delete, and
+ * caught nothing else anywhere - so a server that refused the write for any
+ * other reason said nothing at all.
+ */
 public class TimetableController implements Refreshable {
+
+    /** The only accepted time format, in the field and in the table. */
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     @FXML private ComboBox<String> comboDay;
     @FXML private TextField txtStartTime;
@@ -42,164 +66,211 @@ public class TimetableController implements Refreshable {
     @FXML private Button btnDelete;
     @FXML private Button btnClear;
 
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-
     private final ClassroomService classroomService = new ClassroomServiceImpl();
     private final SubjectService subjectService = new SubjectServiceImpl();
     private final TimetableService timetableService = new TimetableServiceImpl();
-    private final ObservableList<Timetable> timetableList = FXCollections.observableArrayList();
-    private Timetable selectedTimetable;
+    private final ObservableList<Timetable> rows = FXCollections.observableArrayList();
+
+    private Timetable selected;
 
     @FXML
     public void initialize() {
-        setupDayCombo();
-        setupClassroomCombo();
-        setupSubjectCombo();
-        setupTableColumns();
-        setupTableSelectionListener();
-        loadTimetables();
-    }
-
-    private void setupDayCombo() {
         comboDay.setItems(FXCollections.observableArrayList(
-                "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-        ));
+                "Monday", "Tuesday", "Wednesday", "Thursday",
+                "Friday", "Saturday", "Sunday"));
+        comboClassroom.setConverter(classroomLabels());
+        comboSubject.setConverter(subjectLabels());
+        setupTableColumns();
+        timetableTable.setItems(rows);
+        timetableTable.getSelectionModel().selectedItemProperty()
+                .addListener((observable, before, after) -> {
+                    if (after != null) {
+                        selected = after;
+                        populateForm(after);
+                    }
+                });
+        loadClassrooms();
+        loadSubjects();
+        load();
     }
 
-    private void setupClassroomCombo() {
-        comboClassroom.setItems(FXCollections.observableArrayList(classroomService.getAllClassrooms()));
-        comboClassroom.setConverter(new StringConverter<>() {
+    /** Set once. The old version rebuilt both of these on every refresh. */
+    private StringConverter<Classroom> classroomLabels() {
+        return new StringConverter<>() {
             @Override
-            public String toString(Classroom c) {
-                return c == null ? "" : c.getRoomNumber() + " (" + c.getBuilding() + ")";
+            public String toString(Classroom classroom) {
+                return classroom == null
+                        ? ""
+                        : classroom.getRoomNumber() + " (" + classroom.getBuilding() + ")";
             }
 
             @Override
-            public Classroom fromString(String s) {
+            public Classroom fromString(String text) {
                 return null;
             }
-        });
+        };
     }
 
-    private void setupSubjectCombo() {
-        comboSubject.setItems(FXCollections.observableArrayList(subjectService.getAllSubjects()));
-        comboSubject.setConverter(new StringConverter<>() {
+    private StringConverter<Subject> subjectLabels() {
+        return new StringConverter<>() {
             @Override
-            public String toString(Subject s) {
-                return s == null ? "" : s.getCode() + " - " + s.getName();
+            public String toString(Subject subject) {
+                return subject == null
+                        ? ""
+                        : subject.getCode() + " - " + subject.getName();
             }
 
             @Override
-            public Subject fromString(String s) {
+            public Subject fromString(String text) {
                 return null;
             }
-        });
+        };
     }
 
+    /**
+     * The four derived columns are null-guarded. The relations are
+     * {@code optional = false} server-side, so this needs a row that arrived
+     * without one - but an exception thrown inside a cell value factory is
+     * swallowed by JavaFX, and the symptom was a blank table with no
+     * explanation. The old version dereferenced all four straight away.
+     */
     private void setupTableColumns() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colDay.setCellValueFactory(new PropertyValueFactory<>("day"));
         colStartTime.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getStartTime().format(TIME_FORMAT)));
+                new SimpleStringProperty(format(data.getValue().getStartTime())));
         colEndTime.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getEndTime().format(TIME_FORMAT)));
-        colClassroom.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getClassroom().getRoomNumber()));
-        colSubject.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getSubject().getCode()));
-    }
-
-    private void setupTableSelectionListener() {
-        timetableTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                selectedTimetable = newVal;
-                populateForm(newVal);
-            }
+                new SimpleStringProperty(format(data.getValue().getEndTime())));
+        colClassroom.setCellValueFactory(data -> {
+            Classroom classroom = data.getValue().getClassroom();
+            return new SimpleStringProperty(
+                    classroom == null ? "" : classroom.getRoomNumber());
+        });
+        colSubject.setCellValueFactory(data -> {
+            Subject subject = data.getValue().getSubject();
+            return new SimpleStringProperty(subject == null ? "" : subject.getCode());
         });
     }
 
-    private void loadTimetables() {
-        timetableList.setAll(timetableService.getAllTimetables());
-        timetableTable.setItems(timetableList);
+    private static String format(LocalTime time) {
+        return time == null ? "" : time.format(TIME_FORMAT);
     }
 
     @Override
     public void refreshData() {
-        setupClassroomCombo();
-        setupSubjectCombo();
-        loadTimetables();
+        loadClassrooms();
+        loadSubjects();
+        load();
+    }
+
+    private void loadClassrooms() {
+        Crud.read(classroomService::getAllClassrooms,
+                classrooms -> Crud.putItems(comboClassroom, classrooms, Classroom::getId));
+    }
+
+    private void loadSubjects() {
+        Crud.read(subjectService::getAllSubjects,
+                subjects -> Crud.putItems(comboSubject, subjects, Subject::getId));
+    }
+
+    private void load() {
+        Crud.loading(timetableTable);
+        Crud.read(timetableService::getAllTimetables, loaded -> {
+            Crud.empty(timetableTable,
+                    "Nothing scheduled yet. Add a class on the left.");
+            rows.setAll(loaded);
+        });
     }
 
     private void populateForm(Timetable timetable) {
         comboDay.setValue(timetable.getDay());
-        txtStartTime.setText(timetable.getStartTime().format(TIME_FORMAT));
-        txtEndTime.setText(timetable.getEndTime().format(TIME_FORMAT));
-        comboClassroom.setValue(timetable.getClassroom());
-        comboSubject.setValue(timetable.getSubject());
+        txtStartTime.setText(format(timetable.getStartTime()));
+        txtEndTime.setText(format(timetable.getEndTime()));
+        Crud.selectById(comboClassroom, timetable.getClassroom(), Classroom::getId);
+        Crud.selectById(comboSubject, timetable.getSubject(), Subject::getId);
     }
+
+    // =========================================================
+    // WRITES
+    // =========================================================
 
     @FXML
     private void addTimetable() {
         LocalTime start = parseTime(txtStartTime.getText());
         LocalTime end = parseTime(txtEndTime.getText());
-        if (!validateForm(start, end)) return;
-
-        Timetable timetable = new Timetable(
-                null,
-                comboDay.getValue(),
-                start,
-                end,
-                comboClassroom.getValue(),
-                comboSubject.getValue()
-        );
-
-        try {
-            timetableService.addTimetable(timetable);
-            loadTimetables();
-            clearForm();
-        } catch (IllegalStateException e) {
-            showAlert(e.getMessage());
+        if (!validateForm(start, end)) {
+            return;
         }
+        Timetable entry = fromForm(null, start, end);
+        Crud.write(() -> timetableService.addTimetable(entry),
+                () -> {
+                    Toast.ok(entry.getSubject().getCode() + " scheduled on "
+                            + entry.getDay() + " at " + format(start) + ".");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void updateTimetable() {
-        if (selectedTimetable == null) {
-            showAlert("Please select a timetable entry to update.");
+        if (selected == null) {
+            Toast.warn("Choose a class in the table to update.");
             return;
         }
         LocalTime start = parseTime(txtStartTime.getText());
         LocalTime end = parseTime(txtEndTime.getText());
-        if (!validateForm(start, end)) return;
-
-        Timetable candidate = new Timetable(
-                selectedTimetable.getId(),
-                comboDay.getValue(),
-                start,
-                end,
-                comboClassroom.getValue(),
-                comboSubject.getValue()
-        );
-
-        try {
-            timetableService.updateTimetable(candidate);
-            selectedTimetable = candidate;
-            loadTimetables();
-            clearForm();
-        } catch (IllegalStateException e) {
-            showAlert(e.getMessage());
+        if (!validateForm(start, end)) {
+            return;
         }
+        Timetable edited = fromForm(selected.getId(), start, end);
+        Crud.write(() -> timetableService.updateTimetable(edited),
+                () -> {
+                    Toast.ok("Class updated.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
     }
 
     @FXML
     private void deleteTimetable() {
-        if (selectedTimetable == null) {
-            showAlert("Please select a timetable entry to delete.");
+        if (selected == null) {
+            Toast.warn("Choose a class in the table to delete.");
             return;
         }
-        timetableService.deleteTimetable(selectedTimetable.getId());
-        loadTimetables();
-        clearForm();
+        Timetable doomed = selected;
+        Subject subject = doomed.getSubject();
+        String what = subject == null ? "this class" : subject.getCode();
+        boolean go = Crud.confirmDelete(timetableTable,
+                what,
+                what + " on " + doomed.getDay() + " at "
+                        + format(doomed.getStartTime()) + " will be removed from the "
+                        + "timetable. Attendance already recorded against it is kept.");
+        if (!go) {
+            return;
+        }
+        Crud.write(() -> timetableService.deleteTimetable(doomed.getId()),
+                () -> {
+                    Toast.ok(what + " removed from the timetable.");
+                    load();
+                    clearForm();
+                },
+                btnAdd, btnUpdate, btnDelete);
+    }
+
+    // =========================================================
+    // THE FORM
+    // =========================================================
+
+    private Timetable fromForm(Long id, LocalTime start, LocalTime end) {
+        return new Timetable(
+                id,
+                comboDay.getValue(),
+                start,
+                end,
+                comboClassroom.getValue(),
+                comboSubject.getValue());
     }
 
     @FXML
@@ -210,38 +281,46 @@ public class TimetableController implements Refreshable {
         comboClassroom.setValue(null);
         comboSubject.setValue(null);
         timetableTable.getSelectionModel().clearSelection();
-        selectedTimetable = null;
+        selected = null;
     }
 
+    /** {@code null} for anything that is not an {@code HH:mm} time. */
     private LocalTime parseTime(String text) {
+        if (Crud.blank(text)) {
+            return null;
+        }
         try {
             return LocalTime.parse(text.trim(), TIME_FORMAT);
-        } catch (DateTimeParseException | NullPointerException e) {
+        } catch (DateTimeParseException notATime) {
             return null;
         }
     }
 
+    /**
+     * Both times are parsed by the callers and passed in, so nothing downstream
+     * re-parses them and they cannot differ between the check and the write.
+     */
     private boolean validateForm(LocalTime start, LocalTime end) {
-        if (comboDay.getValue() == null || comboClassroom.getValue() == null || comboSubject.getValue() == null) {
-            showAlert("Please select day, classroom, and subject.");
+        if (comboDay.getValue() == null) {
+            Toast.warn("Choose the day of the week.");
+            return false;
+        }
+        if (comboClassroom.getValue() == null) {
+            Toast.warn("Choose the classroom.");
+            return false;
+        }
+        if (comboSubject.getValue() == null) {
+            Toast.warn("Choose the subject.");
             return false;
         }
         if (start == null || end == null) {
-            showAlert("Enter start and end time in HH:mm format (e.g. 09:00).");
+            Toast.warn("Enter both times as HH:mm, for example 09:00.");
             return false;
         }
         if (!start.isBefore(end)) {
-            showAlert("Start time must be before end time.");
+            Toast.warn("The class has to end after it starts.");
             return false;
         }
         return true;
-    }
-
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Validation");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }

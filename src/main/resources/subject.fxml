@@ -1,44 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<!--
+  Subjects - a tab inside AcademicPage. See classroom.fxml for why the in-file
+  heading and the inline styles were removed.
+-->
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.fras.controller.SubjectController">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.fras.controller.SubjectController">
     <center>
-        <VBox spacing="15">
-            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        <VBox spacing="16">
 
-            <Label text="Subject Management" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <VBox spacing="16" styleClass="panel">
+                <Label text="Add or edit a subject" styleClass="panel-title"/>
 
-            <GridPane hgap="10" vgap="10">
-                <Label text="Semester" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <ComboBox fx:id="comboSemester" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="220"/>
+                <GridPane hgap="12" vgap="10">
+                    <Label text="Semester" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <ComboBox fx:id="comboSemester" prefWidth="260"
+                              promptText="which semester"
+                              GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                <Label text="Subject Code" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="txtSubjectCode" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label text="Code" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtSubjectCode" prefWidth="260"
+                               promptText="e.g. CSE301"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <Label text="Subject Name" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <TextField fx:id="txtSubjectName" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Label text="Name" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtSubjectName" prefWidth="260"
+                               promptText="e.g. Operating Systems"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                <Label text="Credit" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <TextField fx:id="txtCredit" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-            </GridPane>
+                    <Label text="Credit" styleClass="field-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="txtCredit" prefWidth="260"
+                               promptText="e.g. 3"
+                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
 
-            <HBox spacing="10">
-                <Button text="Add" fx:id="btnAdd" onAction="#addSubject"/>
-                <Button text="Update" fx:id="btnUpdate" onAction="#updateSubject"/>
-                <Button text="Delete" fx:id="btnDelete" onAction="#deleteSubject"/>
-                <Button text="Clear" fx:id="btnClear" onAction="#clearForm"/>
-            </HBox>
+                <HBox spacing="8">
+                    <Button text="Add" fx:id="btnAdd" onAction="#addSubject"
+                            styleClass="button-primary"/>
+                    <Button text="Update" fx:id="btnUpdate" onAction="#updateSubject"/>
+                    <Button text="Delete" fx:id="btnDelete" onAction="#deleteSubject"
+                            styleClass="button-danger"/>
+                    <Button text="Clear" fx:id="btnClear" onAction="#clearForm"
+                            styleClass="button-ghost"/>
+                </HBox>
+            </VBox>
 
             <TableView fx:id="subjectTable" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                    <TableColumn fx:id="colCode" text="Code" prefWidth="100"/>
-                    <TableColumn fx:id="colName" text="Name" prefWidth="150"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="colCode" text="Code" prefWidth="110"/>
+                    <TableColumn fx:id="colName" text="Subject" prefWidth="200"/>
                     <TableColumn fx:id="colCredit" text="Credit" prefWidth="80"/>
-                    <TableColumn fx:id="colSemester" text="Semester" prefWidth="150"/>
+                    <TableColumn fx:id="colSemester" text="Semester" prefWidth="180"/>
                 </columns>
             </TableView>
         </VBox>

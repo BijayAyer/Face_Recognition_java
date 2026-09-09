@@ -163,6 +163,28 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
 
                 <configuration>
+                    <!--
+                        The server, not the window. This project builds two
+                        programs from one tree: the Spring backend, and a
+                        JavaFX client that reaches it over HTTP at
+                        localhost:8080 (see ApiService). MainApplication does
+                        not start a Spring context, so pointing this plugin at
+                        com.fras.app.Launcher - as it previously did - made
+                        both `mvn spring-boot:run` and `java -jar` on the
+                        repackaged jar launch a JavaFX application with no
+                        module path and no server behind it.
+
+                        The client has its own entry point below, in the
+                        javafx-maven-plugin. So: `mvn spring-boot:run` starts
+                        the backend, `mvn javafx:run` starts the desktop app,
+                        and both are needed.
+
+                        On one line deliberately: this binds to a String
+                        parameter, and a value wrapped across lines depends on
+                        the build trimming it.
+                    -->
+                    <mainClass>com.school.school_management_system.SchoolManagementSystemApplication</mainClass>
+
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
