@@ -1,6 +1,7 @@
 package com.attendance;
 
 import com.attendance.dto.MarkAttendanceRequest;
+import com.attendance.dto.RegisterEntry;
 import com.attendance.entity.Attendance;
 import com.attendance.entity.MarkedBy;
 import com.attendance.export.AttendanceExcelExport;
@@ -12,10 +13,12 @@ import com.attendance.report.AttendanceReports.StudentOverallReport;
 import com.attendance.report.AttendanceReports.StudentSubjectReport;
 import com.attendance.service.AttendanceHistory;
 import com.attendance.service.AttendanceService;
+import com.attendance.service.RegisterView;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +28,7 @@ import java.time.YearMonth;
 import java.util.List;
 
 @SpringBootApplication
+@Profile("attendance-demo")
 public class AttendanceApplication {
 
     public static void main(String[] args) {
@@ -36,7 +40,8 @@ public class AttendanceApplication {
                                  AttendanceHistory attendanceHistory,
                                  AttendanceReports attendanceReports,
                                  AttendanceExcelExport excelExport,
-                                 AttendancePdfExport pdfExport) {
+                                 AttendancePdfExport pdfExport,
+                                 RegisterView registerView) {
         return args -> {
             LocalDate demoDate = LocalDate.of(2026, 8, 20);
             LocalTime sessionStart = LocalTime.of(9, 0);
@@ -95,6 +100,10 @@ public class AttendanceApplication {
                     classroomId, subjectId, demoDate, roster);
             ClassRangeReport rangeReport = attendanceReports.generateClassRangeReport(
                     classroomId, subjectId, demoDate, demoDate, roster);
+            List<RegisterEntry> registerEntries = registerView.describeRoster(
+                    attendanceHistory.getClassRegister(classroomId, subjectId, demoDate),
+                    roster, classroomId, subjectId, demoDate);
+            String sessionTitle = registerView.describeSession(classroomId, subjectId);
 
             System.out.println();
             System.out.printf("Student 102 subject attendance: %.2f%%%n",
@@ -113,6 +122,8 @@ public class AttendanceApplication {
                     reportDir.resolve("attendance-summary.xlsx").toString());
             excelExport.exportClassDailyReport(
                     dailyReport,
+                    sessionTitle,
+                    registerEntries,
                     reportDir.resolve("daily-register.xlsx").toString());
             excelExport.exportClassRangeReport(
                     rangeReport,
@@ -122,6 +133,8 @@ public class AttendanceApplication {
                     reportDir.resolve("attendance-summary.pdf").toString());
             pdfExport.exportClassDailyReport(
                     dailyReport,
+                    sessionTitle,
+                    registerEntries,
                     reportDir.resolve("daily-register.pdf").toString());
             pdfExport.exportClassRangeReport(
                     rangeReport,
